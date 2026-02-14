@@ -43,4 +43,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/companies', [App\Http\Controllers\Api\CompanyController::class, 'index']);
     Route::get('/companies/{id}/periods', [App\Http\Controllers\Api\CompanyController::class, 'periods']);
     Route::get('/dictionaries/factors', [App\Http\Controllers\Api\MasterDataController::class, 'emissionFactors']);
+
+    // Dashboard Routes
+    Route::get('/dashboard/summary', [App\Http\Controllers\Api\DashboardController::class, 'summary']);
+    Route::get('/dashboard/trends', [App\Http\Controllers\Api\DashboardController::class, 'trends']);
 });
