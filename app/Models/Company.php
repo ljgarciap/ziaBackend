@@ -11,11 +11,11 @@ class Company extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'nit', 'sector_id', 'sector', 'logo_url'];
+    protected $fillable = ['name', 'nit', 'company_sector_id', 'logo_url'];
 
-    public function sectorInfo()
+    public function sector()
     {
-        return $this->belongsTo(CompanySector::class, 'sector_id');
+        return $this->belongsTo(CompanySector::class, 'company_sector_id');
     }
 
     public function periods()

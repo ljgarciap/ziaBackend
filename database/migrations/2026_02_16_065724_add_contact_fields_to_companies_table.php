@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            $table->foreignId('sector_id')->nullable()->after('nit')->constrained('company_sectors')->onDelete('set null');
+            $table->string('address')->nullable()->after('company_sector_id');
+            $table->string('phone')->nullable()->after('address');
+            $table->string('email')->nullable()->after('phone');
         });
     }
 
@@ -22,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('companies', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('sector_id');
+            $table->dropColumn(['address', 'phone', 'email']);
         });
     }
 };

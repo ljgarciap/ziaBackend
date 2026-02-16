@@ -4,47 +4,82 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Company;
+use App\Models\CompanySector;
 use App\Models\Period;
 use App\Models\User;
 
 class CompanySeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Create 3 Test Companies
-        $companies = [
-            ['name' => 'Tech Solutions SAS', 'nit' => '900123456', 'sector' => 'Technology'],
-            ['name' => 'Green Energy Corp', 'nit' => '900654321', 'sector' => 'Energy'],
-            ['name' => 'Constructora Perez', 'nit' => '900987654', 'sector' => 'Construction'],
-        ];
+        // Get sectors
+        $construction = CompanySector::where('name', 'Construcción')->first();
+        $technology = CompanySector::where('name', 'Tecnología')->first();
+        $energy = CompanySector::where('name', 'Energía')->first();
 
-        foreach ($companies as $compData) {
-            $company = Company::firstOrCreate(
-                ['nit' => $compData['nit']],
-                ['name' => $compData['name'], 'sector' => $compData['sector']]
+        // Company 1: Bucarretes S.A.S. (Real data from Excel)
+        $bucarretes = Company::firstOrCreate(
+            ['nit' => '900123456-1'],
+            [
+                'name' => 'Bucarretes S.A.S.',
+                'company_sector_id' => $construction->id,
+                'address' => 'Calle 123 #45-67, Bogotá D.C., Colombia',
+                'phone' => '+57 (1) 234-5678',
+                'email' => 'contacto@bucarretes.com',
+                'logo_url' => 'https://ui-avatars.com/api/?name=Bucarretes&background=1a237e&color=fff&size=200'
+            ]
+        );
+
+        // Periods for Bucarretes: 2021-2024
+        foreach ([2021, 2022, 2023, 2024] as $year) {
+            Period::firstOrCreate(
+                ['company_id' => $bucarretes->id, 'year' => $year],
+                ['status' => $year === 2024 ? 'active' : 'closed']
             );
-            
-            // Period 2024
-            Period::firstOrCreate([
-                'company_id' => $company->id,
-                'year' => 2024
-            ], [
-                'status' => 'active'
-            ]);
-            
-            // Period 2023 (Closed)
-            Period::firstOrCreate([
-                'company_id' => $company->id,
-                'year' => 2023
-            ], [
-                'status' => 'closed'
-            ]);
         }
-        
-        // Link existing users to companies? No, user table doesn't have company_id yet.
-        // Assuming user management is separate or superadmin for now.
+
+        // Company 2: EcoTech Solutions S.A.S. (Real-based data)
+        $ecotech = Company::firstOrCreate(
+            ['nit' => '900654321-2'],
+            [
+                'name' => 'EcoTech Solutions S.A.S.',
+                'company_sector_id' => $technology->id,
+                'address' => 'Carrera 7 #80-45, Edificio Tech Plaza, Bogotá D.C., Colombia',
+                'phone' => '+57 (1) 345-6789',
+                'email' => 'info@ecotech.com.co',
+                'logo_url' => 'https://ui-avatars.com/api/?name=EcoTech&background=00897b&color=fff&size=200'
+            ]
+        );
+
+        // Periods for EcoTech: 2023-2024
+        foreach ([2023, 2024] as $year) {
+            Period::firstOrCreate(
+                ['company_id' => $ecotech->id, 'year' => $year],
+                ['status' => $year === 2024 ? 'active' : 'closed']
+            );
+        }
+
+        // Company 3: Industrias Verdes Ltda. (Fictional complete data)
+        $verdes = Company::firstOrCreate(
+            ['nit' => '900987654-3'],
+            [
+                'name' => 'Industrias Verdes Ltda.',
+                'company_sector_id' => $energy->id,
+                'address' => 'Zona Industrial Km 5, Vía Medellín-Rionegro, Antioquia, Colombia',
+                'phone' => '+57 (4) 456-7890',
+                'email' => 'contacto@industriasverdes.com.co',
+                'logo_url' => 'https://ui-avatars.com/api/?name=Industrias+Verdes&background=4caf50&color=fff&size=200'
+            ]
+        );
+
+        // Periods for Industrias Verdes: 2020-2024 (5 years)
+        foreach ([2020, 2021, 2022, 2023, 2024] as $year) {
+            Period::firstOrCreate(
+                ['company_id' => $verdes->id, 'year' => $year],
+                ['status' => $year === 2024 ? 'active' : 'closed']
+            );
+        }
+
+        $this->command->info('✅ Companies and periods created successfully');
     }
 }

@@ -21,7 +21,7 @@ class AdminCompanyController extends Controller
      */
     public function index()
     {
-        return response()->json(Company::withTrashed()->with('periods')->get());
+        return response()->json(Company::withTrashed()->with(['periods', 'sector'])->get());
     }
 
     /**
@@ -36,7 +36,7 @@ class AdminCompanyController extends Controller
      *             required={"name", "nit"},
      *             @OA\Property(property="name", type="string", example="Acme Corp"),
      *             @OA\Property(property="nit", type="string", example="123456789-0"),
-     *             @OA\Property(property="sector_id", type="integer", example=1),
+             *             @OA\Property(property="company_sector_id", type="integer", example=1),
      *             @OA\Property(property="logo_url", type="string", example="https://example.com/logo.png")
      *         )
      *     ),
@@ -48,7 +48,7 @@ class AdminCompanyController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'nit' => 'nullable|string|max:20',
-            'sector_id' => 'nullable|exists:company_sectors,id',
+            'company_sector_id' => 'nullable|exists:company_sectors,id',
             'logo_url' => 'nullable|url',
         ]);
 

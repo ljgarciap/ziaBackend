@@ -20,14 +20,16 @@ return new class extends Migration
             $table->decimal('quantity', 12, 4); // User input
             
             // Detailed results
-            $table->decimal('emissions_co2', 12, 6)->default(0);
-            $table->decimal('emissions_ch4', 12, 6)->default(0);
-            $table->decimal('emissions_n2o', 12, 6)->default(0);
-            $table->decimal('calculated_co2e', 12, 6); // Total Result
+            $table->decimal('emissions_co2', 15, 8)->default(0);
+            $table->decimal('emissions_ch4', 15, 8)->default(0);
+            $table->decimal('emissions_n2o', 15, 8)->default(0);
+            $table->decimal('emissions_nf3', 15, 8)->default(0);
+            $table->decimal('emissions_sf6', 15, 8)->default(0);
+            $table->decimal('calculated_co2e', 15, 8); // Total Result
             
-            $table->decimal('uncertainty_result', 8, 4)->nullable(); // +/- %
-            $table->decimal('activity_data_total', 12, 4)->nullable(); // for aggregation
-            $table->decimal('activity_data_stdev', 12, 4)->nullable(); // for uncertainty
+            $table->decimal('uncertainty_result', 12, 6)->nullable(); // +/- %
+            $table->decimal('activity_data_total', 15, 8)->nullable(); // for aggregation
+            $table->decimal('activity_data_stdev', 15, 8)->nullable(); // for uncertainty
             
             $table->text('notes')->nullable();
             $table->timestamps();

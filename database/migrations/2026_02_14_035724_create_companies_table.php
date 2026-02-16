@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('nit')->unique(); // Tax ID
-            $table->string('sector')->nullable();
+            $table->foreignId('company_sector_id')->nullable()->constrained()->onDelete('set null');
             $table->string('logo_url')->nullable();
             $table->timestamps();
         });

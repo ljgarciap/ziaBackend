@@ -13,6 +13,6 @@ class CompanySector extends Model
 
     public function companies()
     {
-        return $this->hasMany(Company::class, 'sector_id');
+        return $this->hasMany(Company::class, 'company_sector_id');
     }
 }

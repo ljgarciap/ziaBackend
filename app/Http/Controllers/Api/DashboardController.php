@@ -88,27 +88,63 @@ class DashboardController extends Controller
     public function trends(Request $request)
     {
         $companyId = (int)$request->query('company_id', 1);
-        $seed = $companyId * 10;
-        srand($seed);
 
-        $generateData = function($count, $min, $max) {
-            $data = [];
-            for($i=0; $i<$count; $i++) $data[] = rand($min, $max);
-            return $data;
-        };
+        // Get all periods for this company, ordered by year
+        $periods = Period::where('company_id', $companyId)
+            ->orderBy('year')
+            ->get();
+
+        // Temporal Evolution: Emissions by period
+        $periodLabels = [];
+        $periodData = [];
+        
+        foreach ($periods as $period) {
+            $periodLabels[] = (string)$period->year;
+            $totalEmissions = \App\Models\CarbonEmission::where('period_id', $period->id)
+                ->sum('calculated_co2e');
+            $periodData[] = round($totalEmissions, 2);
+        }
+
+        // Category Distribution: Emissions by category for the latest period
+        $latestPeriod = $periods->last();
+        $categoryLabels = [];
+        $categoryData = [];
+
+        if ($latestPeriod) {
+            $emissionsByCategory = \App\Models\CarbonEmission::where('period_id', $latestPeriod->id)
+                ->with(['factor.category'])
+                ->get()
+                ->groupBy(function($emission) {
+                    return $emission->factor->category->name ?? 'Sin categoría';
+                });
+
+            foreach ($emissionsByCategory as $categoryName => $emissions) {
+                $categoryLabels[] = $categoryName;
+                $categoryData[] = round($emissions->sum('calculated_co2e'), 2);
+            }
+        }
 
         return response()->json([
             'revenue_trend' => [
-                'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                'labels' => $periodLabels,
                 'datasets' => [
-                    ['label' => 'Actual', 'data' => $generateData(10, 300, 600)],
-                    ['label' => 'Previo', 'data' => $generateData(10, 200, 500)],
+                    [
+                        'label' => 'Emisiones (tCO2e)',
+                        'data' => $periodData,
+                        'borderColor' => '#1a237e',
+                        'backgroundColor' => 'rgba(26, 35, 126, 0.1)',
+                        'tension' => 0.4
+                    ]
                 ]
             ],
             'sales_quantity' => [
-                'labels' => ['Cat A', 'Cat B', 'Cat C', 'Cat D'],
+                'labels' => $categoryLabels,
                 'datasets' => [
-                    ['label' => 'Volumen', 'data' => $generateData(4, 40, 100)],
+                    [
+                        'label' => 'Emisiones (tCO2e)',
+                        'data' => $categoryData,
+                        'backgroundColor' => ['#1a237e', '#00897b', '#f59e0b', '#e91e63', '#9c27b0', '#ff9800']
+                    ]
                 ]
             ]
         ]);
