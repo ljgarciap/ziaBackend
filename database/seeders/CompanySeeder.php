@@ -22,19 +22,24 @@ class CompanySeeder extends Seeder
         ];
 
         foreach ($companies as $compData) {
-            $company = Company::create($compData);
+            $company = Company::firstOrCreate(
+                ['nit' => $compData['nit']],
+                ['name' => $compData['name'], 'sector' => $compData['sector']]
+            );
             
             // Period 2024
-            Period::create([
+            Period::firstOrCreate([
                 'company_id' => $company->id,
-                'year' => 2024,
+                'year' => 2024
+            ], [
                 'status' => 'active'
             ]);
             
             // Period 2023 (Closed)
-            Period::create([
+            Period::firstOrCreate([
                 'company_id' => $company->id,
-                'year' => 2023,
+                'year' => 2023
+            ], [
                 'status' => 'closed'
             ]);
         }

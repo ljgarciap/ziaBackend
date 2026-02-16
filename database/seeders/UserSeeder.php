@@ -13,25 +13,31 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'superadmin@zia.com',
-            'password' => Hash::make('password'),
-            'role' => 'superadmin'
-        ]);
+        User::firstOrCreate(
+            ['email' => 'superadmin@zia.com'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'role' => 'superadmin'
+            ]
+        );
 
-        User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@zia.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin'
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@zia.com'],
+            [
+                'name' => 'Admin User',
+                'password' => Hash::make('password'),
+                'role' => 'admin'
+            ]
+        );
 
-        User::create([
-            'name' => 'Regular User',
-            'email' => 'user@zia.com',
-            'password' => Hash::make('password'),
-            'role' => 'user'
-        ]);
+        User::firstOrCreate(
+            ['email' => 'user@zia.com'],
+            [
+                'name' => 'Regular User',
+                'password' => Hash::make('password'),
+                'role' => 'user'
+            ]
+        );
     }
 }

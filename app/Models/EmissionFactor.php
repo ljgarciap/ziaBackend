@@ -13,14 +13,25 @@ class EmissionFactor extends Model
 
     protected $fillable = [
         'emission_category_id',
+        'calculation_formula_id',
         'name',
         'unit',
         'factor_co2',
         'factor_ch4',
         'factor_n2o',
+        'factor_nf3',
+        'factor_sf6',
         'factor_total_co2e',
+        'uncertainty_lower',
+        'uncertainty_upper',
+        'uncertainty_distribution',
         'source_reference'
     ];
+
+    public function formula()
+    {
+        return $this->belongsTo(CalculationFormula::class, 'calculation_formula_id');
+    }
 
     public function category()
     {

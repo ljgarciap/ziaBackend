@@ -18,7 +18,16 @@ return new class extends Migration
             $table->foreignId('emission_factor_id')->constrained()->onDelete('restrict');
             
             $table->decimal('quantity', 12, 4); // User input
-            $table->decimal('calculated_co2e', 12, 4); // Result
+            
+            // Detailed results
+            $table->decimal('emissions_co2', 12, 6)->default(0);
+            $table->decimal('emissions_ch4', 12, 6)->default(0);
+            $table->decimal('emissions_n2o', 12, 6)->default(0);
+            $table->decimal('calculated_co2e', 12, 6); // Total Result
+            
+            $table->decimal('uncertainty_result', 8, 4)->nullable(); // +/- %
+            $table->decimal('activity_data_total', 12, 4)->nullable(); // for aggregation
+            $table->decimal('activity_data_stdev', 12, 4)->nullable(); // for uncertainty
             
             $table->text('notes')->nullable();
             $table->timestamps();

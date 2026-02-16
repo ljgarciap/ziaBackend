@@ -22,6 +22,9 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/periods/{period}', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'updatePeriod']);
         Route::delete('/periods/{period}', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'deletePeriod']);
 
+        // Sectors Management
+        Route::apiResource('/sectors', \App\Http\Controllers\Api\Admin\CompanySectorController::class);
+
         // Users Management
         Route::get('/users', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'index']);
         Route::post('/users', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'store']);
@@ -42,9 +45,19 @@ Route::middleware('auth:api')->group(function () {
     // Public Dictionaries (Master Data for usage in forms/dashboards)
     Route::get('/companies', [App\Http\Controllers\Api\CompanyController::class, 'index']);
     Route::get('/companies/{id}/periods', [App\Http\Controllers\Api\CompanyController::class, 'periods']);
+    
+    // Carbon Emissions Management
+    Route::post('/periods/{period}/emissions', [App\Http\Controllers\Api\CarbonEmissionController::class, 'store']);
+    Route::get('/periods/{period}/emissions', [App\Http\Controllers\Api\CarbonEmissionController::class, 'index']);
+    Route::delete('/emissions/{emission}', [App\Http\Controllers\Api\CarbonEmissionController::class, 'destroy']);
+    
     Route::get('/dictionaries/factors', [App\Http\Controllers\Api\MasterDataController::class, 'emissionFactors']);
 
     // Dashboard Routes
     Route::get('/dashboard/summary', [App\Http\Controllers\Api\DashboardController::class, 'summary']);
     Route::get('/dashboard/trends', [App\Http\Controllers\Api\DashboardController::class, 'trends']);
+
+    // Reporting Routes
+    Route::get('/reports/periods/{period}/pdf', [App\Http\Controllers\Api\ReportController::class, 'pdfSummary']);
+    Route::get('/reports/periods/{period}/excel', [App\Http\Controllers\Api\ReportController::class, 'excelExport']);
 });

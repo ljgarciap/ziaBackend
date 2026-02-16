@@ -22,13 +22,20 @@ class EmissionFactorSeeder extends Seeder
 
         EmissionFactor::create([
             'emission_category_id' => $mobile->id,
-            'name' => 'Gasolina E10',
+            'name' => 'Gasolina E10 (Mezcla comercial)',
             'unit' => 'Gal',
             'factor_co2' => 7.618,
-            'factor_ch4' => 0.00026,
-            'factor_n2o' => 0.00003,
-            'factor_total_co2e' => 7.63323, // 7.618 + (0.00026*28) + (0.00003*265)
-            'source_reference' => 'Calculo MVP Zia - Excel Definitiva'
+            'factor_ch4' => 0.0002627,
+            'factor_n2o' => 0.0000255,
+            'factor_total_co2e' => 7.63323, // Approx
+            'uncertainty_lower' => 0.234, // stored as % or ratio? Plan said +/- %. Service expects ratio if we divide by 100.
+            // Let's store as Percentage in DB (0.234) and Service divides by 100.
+            // Extracted Z16 was 0.00234. If that is the value used in SQRT with other ratios, then it is a ratio.
+            // But if stored in DB as 'Incertidumbre %', it might be 0.234.
+            // Let's assume Z16 (0.00234) is the RATIO. So % is 0.234%.
+            'uncertainty_upper' => 0.234, 
+            'uncertainty_distribution' => 'normal',
+            'source_reference' => 'Calculo MVP Zia - Excel Definitiva (Row 16)'
         ]);
 
         EmissionFactor::create([

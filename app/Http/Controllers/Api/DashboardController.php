@@ -12,51 +12,75 @@ class DashboardController extends Controller
 {
     public function summary(Request $request)
     {
-        $companyId = (int)$request->query('company_id', 1);
-        $periodId = (int)$request->query('period_id', 1);
+        $companyId = $request->query('company_id');
+        $periodId = $request->query('period_id');
 
-        // Generate deterministic pseudo-random numbers based on IDs
-        $seed = ($companyId * 100) + $periodId;
-        srand($seed);
+        if (!$companyId || !$periodId) {
+            return response()->json(['error' => 'Company and Period are required'], 400);
+        }
 
-        $baseHuella = 500 + ($seed % 1000);
-        $scope1 = $baseHuella * 0.2 + (rand(0, 50));
-        $scope2 = $baseHuella * 0.05 + (rand(0, 10));
-        $scope3 = $baseHuella - $scope1 - $scope2;
+        // Fetch all emissions for the given period
+        // We join with factors and categories to get names and scopes
+        $emissions = \App\Models\CarbonEmission::where('period_id', $periodId)
+            ->with(['factor.category'])
+            ->get();
+
+        $huellaTotal = $emissions->sum('calculated_co2e');
+        
+        // Group by Scope
+        $scopes = [
+            1 => ['total' => 0, 'label' => 'Alcance 1', 'color' => '#1a237e'],
+            2 => ['total' => 0, 'label' => 'Alcance 2', 'color' => '#00897b'],
+            3 => ['total' => 0, 'label' => 'Alcance 3', 'color' => '#f59e0b'],
+        ];
+
+        $details = [];
+
+        foreach ($emissions as $emission) {
+            $scope = $emission->factor->category->scope ?? 3;
+            if (isset($scopes[$scope])) {
+                $scopes[$scope]['total'] += $emission->calculated_co2e;
+            }
+
+            $details[] = [
+                'scope' => $scope,
+                'source' => $emission->factor->name,
+                'total' => round($emission->calculated_co2e, 4),
+                'percentage' => $huellaTotal > 0 ? round(($emission->calculated_co2e / $huellaTotal) * 100, 2) : 0
+            ];
+        }
+
+        // Prepare response structure
+        $alcancesRes = [];
+        $donutData = [];
+        foreach ($scopes as $sNum => $sInfo) {
+            $alcancesRes['scope_' . $sNum] = [
+                'total' => round($sInfo['total'], 2),
+                'percentage' => $huellaTotal > 0 ? round(($sInfo['total'] / $huellaTotal) * 100) : 0,
+                'neutralizado' => 0 // Future field
+            ];
+            $donutData[] = [
+                'label' => $sInfo['label'],
+                'value' => round($sInfo['total'], 2),
+                'color' => $sInfo['color']
+            ];
+        }
+
+        // Equivalency Logic: ~0.5 tCO2e is what one person consumes annually in energy (typical factor)
+        $eqFactor = 0.5; 
+        $eqValue = $huellaTotal > 0 ? round($huellaTotal / $eqFactor, 1) : 0;
 
         return response()->json([
-            'huella_total' => round($baseHuella, 2),
-            'neutralizados' => ($seed % 5 === 0) ? round($baseHuella * 0.1, 2) : 0,
-            'alcances' => [
-                'scope_1' => [
-                    'total' => round($scope1, 2),
-                    'percentage' => round(($scope1 / $baseHuella) * 100),
-                    'neutralizado' => 0
-                ],
-                'scope_2' => [
-                    'total' => round($scope2, 2),
-                    'percentage' => round(($scope2 / $baseHuella) * 100),
-                    'neutralizado' => 0
-                ],
-                'scope_3' => [
-                    'total' => round($scope3, 2),
-                    'percentage' => round(($scope3 / $baseHuella) * 100),
-                    'neutralizado' => 0
-                ]
+            'huella_total' => round($huellaTotal, 2),
+            'neutralizados' => 0, // Placeholder
+            'alcances' => $alcancesRes,
+            'equivalency' => [
+                'value' => $eqValue,
+                'label' => 'Personas consumiendo energía eléctrica anualmente'
             ],
             'chart_data' => [
-                'donut' => [
-                    ['label' => 'Alcance 1', 'value' => round($scope1, 2), 'color' => '#1a237e'],
-                    ['label' => 'Alcance 2', 'value' => round($scope2, 2), 'color' => '#00897b'],
-                    ['label' => 'Alcance 3', 'value' => round($scope3, 2), 'color' => '#f59e0b']
-                ],
-                'details' => [
-                    ['scope' => 1, 'source' => 'Vehículos propios', 'total' => round($scope1 * 0.6, 2), 'percentage' => round(($scope1 * 0.6 / $baseHuella) * 100, 2)],
-                    ['scope' => 1, 'source' => 'Gas natural', 'total' => round($scope1 * 0.4, 2), 'percentage' => round(($scope1 * 0.4 / $baseHuella) * 100, 2)],
-                    ['scope' => 2, 'source' => 'Energía Eléctrica', 'total' => round($scope2, 2), 'percentage' => round(($scope2 / $baseHuella) * 100, 2)],
-                    ['scope' => 3, 'source' => 'Viajes', 'total' => round($scope3 * 0.5, 2), 'percentage' => round(($scope3 * 0.5 / $baseHuella) * 100, 2)],
-                    ['scope' => 3, 'source' => 'Residuos', 'total' => round($scope3 * 0.5, 2), 'percentage' => round(($scope3 * 0.5 / $baseHuella) * 100, 2)],
-                ]
+                'donut' => $donutData,
+                'details' => collect($details)->sortByDesc('total')->values()->all()
             ]
         ]);
     }

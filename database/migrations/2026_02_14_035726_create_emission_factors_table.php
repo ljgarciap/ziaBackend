@@ -18,11 +18,18 @@ return new class extends Migration
             $table->string('name'); // e.g., 'Gasolina E10'
             $table->string('unit'); // e.g., 'Gal'
             
+            $table->foreignId('calculation_formula_id')->nullable()->constrained()->onDelete('set null'); // Link to formula 
+            
             // Detailed factors for high precision
             $table->decimal('factor_co2', 12, 6)->default(0);
             $table->decimal('factor_ch4', 12, 6)->default(0);
             $table->decimal('factor_n2o', 12, 6)->default(0);
             $table->decimal('factor_total_co2e', 12, 6)->default(0); // Pre-calculated total
+            
+            // Uncertainty parameters
+            $table->decimal('uncertainty_lower', 8, 4)->nullable(); // e.g., -5%
+            $table->decimal('uncertainty_upper', 8, 4)->nullable(); // e.g., +5%
+            $table->string('uncertainty_distribution')->nullable(); // 'normal', 'lognormal', etc.
             
             $table->text('source_reference')->nullable(); // e.g., 'IPCC 2006'
             $table->timestamps();
