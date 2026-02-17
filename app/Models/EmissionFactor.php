@@ -14,6 +14,7 @@ class EmissionFactor extends Model
     protected $fillable = [
         'emission_category_id',
         'calculation_formula_id',
+        'measurement_unit_id',
         'name',
         'unit',
         'factor_co2',
@@ -27,6 +28,11 @@ class EmissionFactor extends Model
         'uncertainty_distribution',
         'source_reference'
     ];
+
+    public function unit()
+    {
+        return $this->belongsTo(MeasurementUnit::class, 'measurement_unit_id');
+    }
 
     public function formula()
     {

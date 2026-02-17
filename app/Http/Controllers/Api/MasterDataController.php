@@ -24,7 +24,15 @@ class MasterDataController extends Controller
      */
     public function emissionFactors()
     {
-        $categories = EmissionCategory::with('factors')->get();
-        return response()->json($categories);
+        // Return hierarchy: Scope -> Categories (root only) -> Children (recursive) -> Factors
+        $scopes = \App\Models\Scope::with(['categories' => function($query) {
+            $query->whereNull('parent_id')
+                  ->with(['children' => function($q) {
+                      $q->with('factors.unit', 'factors.formula'); // Load factors for subcategories
+                  }, 'factors.unit', 'factors.formula']) // Load factors for root categories
+                  ->orderBy('id');
+        }])->get();
+
+        return response()->json($scopes);
     }
 }

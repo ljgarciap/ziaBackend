@@ -11,7 +11,22 @@ class EmissionCategory extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['name', 'scope', 'description'];
+    protected $fillable = ['name', 'scope', 'scope_id', 'parent_id', 'description'];
+
+    public function scope()
+    {
+        return $this->belongsTo(Scope::class);
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(EmissionCategory::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(EmissionCategory::class, 'parent_id');
+    }
 
     public function factors()
     {
