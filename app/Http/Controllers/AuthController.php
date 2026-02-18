@@ -93,9 +93,52 @@ class AuthController extends Controller
             $user = Auth::user();
             $token = $user->createToken('authToken')->accessToken;
 
+            // Load associated companies
+            $user->load('companies');
+
+            $contexts = [];
+
+            // 1. Global Contexts
+            if ($user->role === 'superadmin') {
+                $contexts[] = ['type' => 'global', 'role' => 'superadmin', 'label' => 'Portal de Superadministrador'];
+                $contexts[] = ['type' => 'global', 'role' => 'admin', 'label' => 'Portal de Administrador (Restringido)'];
+            } elseif ($user->role === 'admin') {
+                $contexts[] = ['type' => 'global', 'role' => 'admin', 'label' => 'Portal de Administrador'];
+            }
+
+            // 2. Company Contexts
+            foreach ($user->companies as $company) {
+                 if ($company->pivot->is_active) {
+                    $contexts[] = [
+                        'type' => 'company',
+                        'id' => $company->id,
+                        'name' => $company->name,
+                        'role' => $company->pivot->role,
+                        'label' => $company->name,
+                        'logo_url' => $company->logo_url
+                    ];
+                 }
+            }
+
+            // 3. Response Logic
+            if (count($contexts) === 0) {
+                 return response()->json(['error' => 'No active roles assigned.'], 403);
+            }
+
+            if (count($contexts) === 1) {
+                return response()->json([
+                    'user' => $user,
+                    'token' => $token,
+                    'context' => $contexts[0],
+                    'require_selection' => false
+                ], 200);
+            }
+
             return response()->json([
                 'user' => $user,
-                'token' => $token
+                'token' => $token,
+                'contexts' => $contexts,
+                'require_selection' => true
             ], 200);
         }
 

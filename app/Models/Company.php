@@ -8,12 +8,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Traits\LogsActivity;
+use App\Models\User;
 
 class Company extends Model
 {
     use HasFactory, SoftDeletes, LogsActivity;
 
     protected $fillable = ['name', 'nit', 'company_sector_id', 'logo_url'];
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'company_user')
+            ->withPivot('role', 'is_active')
+            ->withTimestamps();
+    }
 
     public function sector()
     {

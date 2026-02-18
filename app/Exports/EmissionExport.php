@@ -7,7 +7,11 @@ use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class EmissionExport implements FromQuery, WithHeadings, WithMapping
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+
+class EmissionExport implements FromQuery, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
     protected $periodId;
 
@@ -20,7 +24,7 @@ class EmissionExport implements FromQuery, WithHeadings, WithMapping
     {
         return CarbonEmission::query()
             ->where('period_id', $this->periodId)
-            ->with(['factor.category']);
+            ->with(['factor.category.scope', 'factor.unit']);
     }
 
     public function headings(): array
@@ -49,9 +53,9 @@ class EmissionExport implements FromQuery, WithHeadings, WithMapping
         return [
             $emission->id,
             $emission->factor->category->name ?? 'N/A',
-            $emission->factor->category->scope ?? 'N/A',
+            $emission->factor->category->scope->name ?? 'N/A',
             $emission->factor->name,
-            $emission->factor->unit,
+            $emission->factor->unit->symbol ?? $emission->factor->unit->name ?? 'N/A',
             $emission->quantity,
             $emission->emissions_co2,
             $emission->emissions_ch4,
@@ -63,5 +67,20 @@ class EmissionExport implements FromQuery, WithHeadings, WithMapping
             $emission->created_at->toDateTimeString(),
             $emission->notes
         ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        // Apply background color to header row
+        $sheet->getStyle('A1:O1')->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FF1A237E');
+
+        // Apply text color to header row
+        $sheet->getStyle('A1:O1')->getFont()->getColor()->setARGB('FFFFFFFF');
+        $sheet->getStyle('A1:O1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:O1')->getFont()->setSize(12);
+
+        return [];
     }
 }

@@ -12,7 +12,7 @@ class AdminUserController extends Controller
 {
     public function index()
     {
-        return response()->json(User::withTrashed()->get());
+        return response()->json(User::with('companies')->withTrashed()->get());
     }
 
     public function store(Request $request)
@@ -22,10 +22,18 @@ class AdminUserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
             'role' => 'required|string|in:superadmin,admin,user',
+            'companies' => 'array',
+            'companies.*' => 'exists:companies,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
+        }
+
+        // Enforce Role Restrictions
+        $currentUser = auth()->user();
+        if ($currentUser->role === 'admin' && $request->role !== 'user') {
+             return response()->json(['error' => 'Admins can only create Users, not other Admins or Superadmins.'], 403);
         }
 
         $user = User::create([
@@ -35,17 +43,33 @@ class AdminUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json($user, 201);
+        if ($request->has('companies')) {
+            $user->companies()->sync($request->companies);
+        }
+
+        return response()->json($user->load('companies'), 201);
     }
 
     public function update(Request $request, User $user)
     {
+        // Enforce Role Restrictions
+        $currentUser = auth()->user();
+        if ($currentUser->role === 'admin' && $request->has('role') && $request->role !== 'user') {
+             return response()->json(['error' => 'Admins can only update Users.'], 403);
+        }
+        
         $data = $request->only('name', 'email', 'role');
         if ($request->has('password')) {
             $data['password'] = Hash::make($request->password);
         }
+        
         $user->update($data);
-        return response()->json($user);
+
+        if ($request->has('companies')) {
+            $user->companies()->sync($request->companies);
+        }
+
+        return response()->json($user->load('companies'));
     }
 
     public function destroy(User $user)
