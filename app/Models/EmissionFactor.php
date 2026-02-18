@@ -16,7 +16,7 @@ class EmissionFactor extends Model
         'calculation_formula_id',
         'measurement_unit_id',
         'name',
-        'unit',
+        // 'unit', // Removed in favor of relation
         'factor_co2',
         'factor_ch4',
         'factor_n2o',

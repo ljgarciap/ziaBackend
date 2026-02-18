@@ -41,6 +41,12 @@ Route::middleware('auth:api')->group(function () {
 
         // Formulas Management
         Route::apiResource('/formulas', \App\Http\Controllers\Api\Admin\CalculationFormulaController::class);
+
+        // Units Management
+        Route::apiResource('/units', \App\Http\Controllers\Api\Admin\AdminUnitController::class);
+
+        // Scopes Management
+        Route::apiResource('/scopes', \App\Http\Controllers\Api\Admin\AdminScopeController::class);
     });
 
     // Public Dictionaries (Master Data for usage in forms/dashboards)
