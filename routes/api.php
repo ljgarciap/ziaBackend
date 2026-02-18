@@ -13,6 +13,9 @@ Route::middleware('auth:api')->group(function () {
 
     // Admin & SuperAdmin Routes
     Route::middleware(['role:superadmin,admin'])->prefix('admin')->group(function () {
+        // Audit Logs (SuperAdmin only - controller checks logic)
+        Route::get('/audit-logs', [\App\Http\Controllers\Api\Admin\AdminAuditController::class, 'index']);
+
         // Companies & Periods Management
         Route::get('/companies', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'index']);
         Route::post('/companies', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'store']);

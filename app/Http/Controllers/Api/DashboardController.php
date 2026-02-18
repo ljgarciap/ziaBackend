@@ -37,7 +37,9 @@ class DashboardController extends Controller
         $details = [];
 
         foreach ($emissions as $emission) {
-            $scope = $emission->factor->category->scope ?? 3;
+            // Use scope_id directly as it corresponds to the key (1, 2, 3)
+            // Using ->scope would return the Model object, causing TypeError
+            $scope = $emission->factor->category->scope_id ?? 3;
             if (isset($scopes[$scope])) {
                 $scopes[$scope]['total'] += $emission->calculated_co2e;
             }
