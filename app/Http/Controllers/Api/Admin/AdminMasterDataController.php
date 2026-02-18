@@ -10,17 +10,17 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminMasterDataController extends Controller
 {
-    // Categories CRUD
+// Categories CRUD
     public function indexCategories()
     {
-        return response()->json(EmissionCategory::withTrashed()->with('factors')->get());
+        return response()->json(EmissionCategory::withTrashed()->with(['factors.unit', 'scope'])->get());
     }
 
     public function storeCategory(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'scope' => 'required|string|in:1,2,3',
+            'scope_id' => 'required|exists:scopes,id',
             'description' => 'nullable|string',
         ]);
 
@@ -31,20 +31,14 @@ class AdminMasterDataController extends Controller
         $category = EmissionCategory::create($request->all());
         return response()->json($category, 201);
     }
-
-    public function deleteCategory(EmissionCategory $category)
-    {
-        $category->delete();
-        return response()->json(null, 204);
-    }
-
+// ...
     // Factors CRUD
     public function storeFactor(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'emission_category_id' => 'required|exists:emission_categories,id',
             'name' => 'required|string|max:255',
-            'unit' => 'required|string|max:50',
+            'measurement_unit_id' => 'required|exists:measurement_units,id',
             'factor_total_co2e' => 'required|numeric',
         ]);
 

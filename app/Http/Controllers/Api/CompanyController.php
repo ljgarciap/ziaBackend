@@ -10,7 +10,17 @@ use Illuminate\Http\Request;
 class CompanyController extends Controller
 {
     /**
-     * List all companies (for selection).
+     * @OA\Get(
+     *     path="/api/companies",
+     *     summary="List all companies",
+     *     tags={"Companies"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of companies",
+     *         @OA\JsonContent(type="array", @OA\Items(type="object"))
+     *     )
+     * )
      */
     public function index()
     {
@@ -18,7 +28,23 @@ class CompanyController extends Controller
     }
 
     /**
-     * Get periods for a specific company.
+     * @OA\Get(
+     *     path="/api/companies/{company}/periods",
+     *     summary="Get periods for a specific company",
+     *     tags={"Companies"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="company",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of periods",
+     *         @OA\JsonContent(type="array", @OA\Items(type="object"))
+     *     )
+     * )
      */
     public function periods($companyContext)
     {

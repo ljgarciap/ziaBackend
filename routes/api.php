@@ -13,6 +13,9 @@ Route::middleware('auth:api')->group(function () {
 
     // Admin & SuperAdmin Routes
     Route::middleware(['role:superadmin,admin'])->prefix('admin')->group(function () {
+        // Audit Logs (SuperAdmin only - controller checks logic)
+        Route::get('/audit-logs', [\App\Http\Controllers\Api\Admin\AdminAuditController::class, 'index']);
+
         // Companies & Periods Management
         Route::get('/companies', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'index']);
         Route::post('/companies', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'store']);
@@ -22,29 +25,54 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/periods/{period}', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'updatePeriod']);
         Route::delete('/periods/{period}', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'deletePeriod']);
 
+        // Company Specific Factors
+        Route::get('/companies/{company}/factors', [\App\Http\Controllers\Api\Admin\AdminCompanyFactorController::class, 'index']);
+        Route::put('/companies/{company}/factors', [\App\Http\Controllers\Api\Admin\AdminCompanyFactorController::class, 'update']);
+
+        // Sectors Management
+        Route::apiResource('/sectors', \App\Http\Controllers\Api\Admin\CompanySectorController::class);
+
         // Users Management
         Route::get('/users', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'index']);
         Route::post('/users', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'store']);
         Route::put('/users/{user}', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'update']);
         Route::delete('/users/{user}', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'destroy']);
 
-        // Master Data (Categories & Factors) - Restricted to SuperAdmin
-        Route::middleware(['role:superadmin'])->group(function () {
-            Route::get('/categories', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'indexCategories']);
-            Route::post('/categories', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'storeCategory']);
-            Route::delete('/categories/{category}', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'deleteCategory']);
-            Route::post('/factors', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'storeFactor']);
-            Route::put('/factors/{factor}', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'updateFactor']);
-            Route::delete('/factors/{factor}', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'deleteFactor']);
-        });
+        // Master Data (Categories & Factors)
+        Route::get('/categories', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'indexCategories']);
+        Route::post('/categories', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'storeCategory']);
+        Route::delete('/categories/{category}', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'deleteCategory']);
+        Route::post('/factors', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'storeFactor']);
+        Route::put('/factors/{factor}', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'updateFactor']);
+        Route::delete('/factors/{factor}', [\App\Http\Controllers\Api\Admin\AdminMasterDataController::class, 'deleteFactor']);
+
+        // Formulas Management
+        Route::apiResource('/formulas', \App\Http\Controllers\Api\Admin\CalculationFormulaController::class);
+
+        // Units Management
+        Route::apiResource('/units', \App\Http\Controllers\Api\Admin\AdminUnitController::class);
+
+        // Scopes Management
+        Route::apiResource('/scopes', \App\Http\Controllers\Api\Admin\AdminScopeController::class);
     });
 
     // Public Dictionaries (Master Data for usage in forms/dashboards)
     Route::get('/companies', [App\Http\Controllers\Api\CompanyController::class, 'index']);
     Route::get('/companies/{id}/periods', [App\Http\Controllers\Api\CompanyController::class, 'periods']);
+    
+    // Carbon Emissions Management
+    Route::post('/periods/{period}/emissions', [App\Http\Controllers\Api\CarbonEmissionController::class, 'store']);
+    Route::get('/periods/{period}/emissions', [App\Http\Controllers\Api\CarbonEmissionController::class, 'index']);
+    Route::delete('/emissions/{emission}', [App\Http\Controllers\Api\CarbonEmissionController::class, 'destroy']);
+    
     Route::get('/dictionaries/factors', [App\Http\Controllers\Api\MasterDataController::class, 'emissionFactors']);
 
     // Dashboard Routes
     Route::get('/dashboard/summary', [App\Http\Controllers\Api\DashboardController::class, 'summary']);
     Route::get('/dashboard/trends', [App\Http\Controllers\Api\DashboardController::class, 'trends']);
+
+    // Reporting Routes
+    Route::get('/reports/periods/{period}/pdf', [App\Http\Controllers\Api\ReportController::class, 'pdfSummary']);
+    Route::get('/reports/periods/{period}/excel', [App\Http\Controllers\Api\ReportController::class, 'excelExport']);
 });
+

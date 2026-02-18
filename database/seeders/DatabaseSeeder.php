@@ -12,9 +12,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            UserSeeder::class, // Assuming this exists or create it
+            CompanySectorSeeder::class,
+            CalculationFormulaSeeder::class,
+            EmissionCategorySeeder::class, // Must run before EmissionFactorSeeder
             EmissionFactorSeeder::class,
+            UserSeeder::class,
             CompanySeeder::class,
+            CarbonEmissionSeeder::class,
         ]);
     }
 }
