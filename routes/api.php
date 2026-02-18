@@ -25,6 +25,10 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/periods/{period}', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'updatePeriod']);
         Route::delete('/periods/{period}', [\App\Http\Controllers\Api\Admin\AdminCompanyController::class, 'deletePeriod']);
 
+        // Company Specific Factors
+        Route::get('/companies/{company}/factors', [\App\Http\Controllers\Api\Admin\AdminCompanyFactorController::class, 'index']);
+        Route::put('/companies/{company}/factors', [\App\Http\Controllers\Api\Admin\AdminCompanyFactorController::class, 'update']);
+
         // Sectors Management
         Route::apiResource('/sectors', \App\Http\Controllers\Api\Admin\CompanySectorController::class);
 

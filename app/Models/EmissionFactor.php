@@ -50,4 +50,11 @@ class EmissionFactor extends Model
     {
         return $this->hasMany(CarbonEmission::class);
     }
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_emission_factor')
+            ->withPivot('is_enabled')
+            ->withTimestamps();
+    }
 }

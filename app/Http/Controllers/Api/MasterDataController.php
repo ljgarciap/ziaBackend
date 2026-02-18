@@ -22,17 +22,57 @@ class MasterDataController extends Controller
      *     )
      * )
      */
-    public function emissionFactors()
+    public function emissionFactors(Request $request)
     {
+        $companyId = $request->query('company_id');
+
         // Return hierarchy: Scope -> Categories (root only) -> Children (recursive) -> Factors
-        $scopes = \App\Models\Scope::with(['categories' => function($query) {
+        $scopes = \App\Models\Scope::with(['categories' => function($query) use ($companyId) {
             $query->whereNull('parent_id')
-                  ->with(['children' => function($q) {
-                      $q->with('factors.unit', 'factors.formula'); // Load factors for subcategories
-                  }, 'factors.unit', 'factors.formula']) // Load factors for root categories
+                  ->with(['children' => function($q) use ($companyId) {
+                      $q->with(['factors' => function($fQuery) use ($companyId) {
+                          $fQuery->with('unit', 'formula');
+                          if ($companyId) {
+                              $fQuery->with(['companies' => function($cq) use ($companyId) {
+                                  $cq->where('company_id', $companyId);
+                              }]);
+                          }
+                      }]); 
+                  }, 'factors' => function($fQuery) use ($companyId) {
+                      $fQuery->with('unit', 'formula');
+                      if ($companyId) {
+                          $fQuery->with(['companies' => function($cq) use ($companyId) {
+                              $cq->where('company_id', $companyId);
+                          }]);
+                      }
+                  }])
                   ->orderBy('id');
         }])->get();
 
+        // Recursively filter factors in PHP to avoid expensive correlated subqueries
+        $scopes->each(function($scope) use ($companyId) {
+            $scope->categories->each(function($cat) use ($companyId) {
+                $this->filterCategoryFactors($cat, $companyId);
+            });
+        });
+
         return response()->json($scopes);
+    }
+
+    private function filterCategoryFactors($category, $companyId)
+    {
+        if ($companyId) {
+            $category->setRelation('factors', $category->factors->filter(function($factor) {
+                $pivot = $factor->companies->first();
+                // If no record, enabled by default. If record exists, check is_enabled.
+                return !$pivot || $pivot->pivot->is_enabled;
+            })->values());
+        }
+
+        if ($category->children) {
+            $category->children->each(function($child) use ($companyId) {
+                $this->filterCategoryFactors($child, $companyId);
+            });
+        }
     }
 }

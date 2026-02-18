@@ -24,4 +24,11 @@ class Company extends Model
     {
         return $this->hasMany(Period::class);
     }
+
+    public function factors()
+    {
+        return $this->belongsToMany(EmissionFactor::class, 'company_emission_factor')
+            ->withPivot('is_enabled')
+            ->withTimestamps();
+    }
 }
