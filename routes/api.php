@@ -66,6 +66,7 @@ Route::middleware('auth:api')->group(function () {
         // Carbon Emissions Management
         Route::post('/periods/{period}/emissions', [App\Http\Controllers\Api\CarbonEmissionController::class, 'store']);
         Route::get('/periods/{period}/emissions', [App\Http\Controllers\Api\CarbonEmissionController::class, 'index']);
+        Route::get('/companies/{company}/emissions/history', [App\Http\Controllers\Api\CarbonEmissionController::class, 'history']);
         Route::delete('/emissions/{emission}', [App\Http\Controllers\Api\CarbonEmissionController::class, 'destroy']);
         
         Route::get('/dictionaries/factors', [App\Http\Controllers\Api\MasterDataController::class, 'emissionFactors']);
