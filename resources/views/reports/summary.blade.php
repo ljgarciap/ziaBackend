@@ -4,16 +4,18 @@
     <meta charset="utf-8">
     <title>Reporte de Huella de Carbono - Zia</title>
     <style>
-        body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; padding: 20px; }
+        @page { margin: 40px 40px; }
+        body { font-family: 'Helvetica', sans-serif; color: #333; line-height: 1.5; padding: 0; }
         .header { text-align: center; border-bottom: 2px solid #1a237e; padding-bottom: 10px; margin-bottom: 30px; }
         .header h1 { color: #1a237e; margin: 0; font-size: 24px; }
         .header p { color: #666; font-size: 14px; margin: 5px 0 0 0; }
         .company-info { margin-bottom: 30px; }
         .company-info div { margin-bottom: 5px; }
         .label { font-weight: bold; color: #1a237e; }
-        .kpi-grid { display: block; width: 100%; margin-bottom: 30px; }
-        .kpi-card { float: left; width: 23%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; text-align: center; margin-right: 1.5%; background: #f9f9f9; }
-        .kpi-card:last-child { margin-right: 0; }
+        .kpi-table { width: 100%; margin-bottom: 30px; border: none; }
+        .kpi-table td { border: none; padding: 0 10px 0 0; width: 25%; vertical-align: top; }
+        .kpi-table td:last-child { padding-right: 0; }
+        .kpi-card { padding: 15px 10px; border: 1px solid #ddd; border-radius: 8px; text-align: center; background: #f9f9f9; }
         .kpi-title { font-size: 10px; text-transform: uppercase; color: #666; margin-bottom: 5px; }
         .kpi-value { font-size: 18px; font-weight: bold; color: #1a237e; }
         .kpi-unit { font-size: 10px; color: #666; }
@@ -42,28 +44,38 @@
         <div><span class="label">Estado:</span> {{ ucfirst($period->status) }}</div>
     </div>
 
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-title">Huella Total</div>
-            <div class="kpi-value">{{ number_format($summary['huella_total'], 2) }}</div>
-            <div class="kpi-unit">tCO2e</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-title">Alcance 1</div>
-            <div class="kpi-value">{{ number_format($summary['alcances']['scope_1']['total'], 2) }}</div>
-            <div class="kpi-unit">tCO2e</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-title">Alcance 2</div>
-            <div class="kpi-value">{{ number_format($summary['alcances']['scope_2']['total'], 2) }}</div>
-            <div class="kpi-unit">tCO2e</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-title">Alcance 3</div>
-            <div class="kpi-value">{{ number_format($summary['alcances']['scope_3']['total'], 2) }}</div>
-            <div class="kpi-unit">tCO2e</div>
-        </div>
-    </div>
+    <table class="kpi-table">
+        <tr>
+            <td class="kpi-cell">
+                <div class="kpi-card">
+                    <div class="kpi-title">Huella Total</div>
+                    <div class="kpi-value">{{ number_format($summary['huella_total'], 2) }}</div>
+                    <div class="kpi-unit">tCO2e</div>
+                </div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-card">
+                    <div class="kpi-title">Alcance 1</div>
+                    <div class="kpi-value">{{ number_format($summary['alcances']['scope_1']['total'], 2) }}</div>
+                    <div class="kpi-unit">tCO2e</div>
+                </div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-card">
+                    <div class="kpi-title">Alcance 2</div>
+                    <div class="kpi-value">{{ number_format($summary['alcances']['scope_2']['total'], 2) }}</div>
+                    <div class="kpi-unit">tCO2e</div>
+                </div>
+            </td>
+            <td class="kpi-cell">
+                <div class="kpi-card">
+                    <div class="kpi-title">Alcance 3</div>
+                    <div class="kpi-value">{{ number_format($summary['alcances']['scope_3']['total'], 2) }}</div>
+                    <div class="kpi-unit">tCO2e</div>
+                </div>
+            </td>
+        </tr>
+    </table>
     <div class="clear"></div>
 
     <div class="section-title">Distribución por Fuente de Emisión</div>
@@ -80,9 +92,9 @@
         <tbody>
             @foreach($period->emissions as $emission)
             <tr>
-                <td>Alcance {{ $emission->factor->category->scope }}</td>
+                <td>{{ $emission->factor->category->scope->name ?? 'Alcance ' . ($emission->factor->category->scope_id ?? 'N/A') }}</td>
                 <td>{{ $emission->factor->name }}</td>
-                <td>{{ number_format($emission->quantity, 2) }} {{ $emission->factor->unit }}</td>
+                <td>{{ number_format($emission->quantity, 2) }} {{ $emission->factor->unit->symbol ?? $emission->factor->unit->name ?? 'u' }}</td>
                 <td><strong>{{ number_format($emission->calculated_co2e, 4) }}</strong></td>
                 <td>{{ number_format($emission->uncertainty_result, 3) }}%</td>
             </tr>

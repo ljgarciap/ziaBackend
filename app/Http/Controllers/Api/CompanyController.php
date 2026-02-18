@@ -22,9 +22,23 @@ class CompanyController extends Controller
      *     )
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Company::all());
+        $user = $request->user();
+        $contextCompanyId = $request->attributes->get('current_company_id');
+
+        // If specific context is active, return only that company
+        if ($contextCompanyId) {
+            return response()->json(Company::where('id', $contextCompanyId)->get());
+        }
+
+        // If Superadmin or Global Admin, return all
+        if ($user->role === 'superadmin' || $user->role === 'admin') {
+            return response()->json(Company::all());
+        }
+
+        // Otherwise return associated companies
+        return response()->json($user->companies);
     }
 
     /**

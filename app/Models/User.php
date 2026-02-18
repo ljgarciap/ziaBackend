@@ -43,6 +43,40 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+    /**
+     * Get the companies associated with the user.
+     */
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user')
+            ->withPivot('role', 'is_active')
+            ->withTimestamps();
+    }
+
+    /**
+     * Check if the user is a global administrator.
+     */
+    public function isGlobalAdmin(): bool
+    {
+        return in_array($this->role, ['superadmin', 'admin']);
+    }
+
+    /**
+     * Check if the user can manage a specific role.
+     */
+    public function canManageRole(string $targetRole): bool
+    {
+        if ($this->role === 'superadmin') {
+            return true;
+        }
+
+        if ($this->role === 'admin') {
+            return $targetRole === 'user';
+        }
+
+        return false;
+    }
+
     protected function casts(): array
     {
         return [

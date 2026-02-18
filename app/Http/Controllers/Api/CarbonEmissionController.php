@@ -146,9 +146,67 @@ class CarbonEmissionController extends Controller
      *     @OA\Response(response=204, description="Deleted successfully")
      * )
      */
-     public function destroy(CarbonEmission $emission)
-     {
-         $emission->delete();
-         return response()->json(null, 204);
-     }
+    public function destroy(CarbonEmission $emission)
+    {
+        $emission->delete();
+        return response()->json(null, 204);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/companies/{company}/emissions/history",
+     *     summary="Get paginated emission history for a company",
+     *     tags={"Emissions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="company", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="page", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="per_page", in="query", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="search", in="query", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="sort_by", in="query", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="sort_dir", in="query", @OA\Schema(type="string", enum={"asc", "desc"}))
+     * )
+     */
+    public function history(Request $request, \App\Models\Company $company)
+    {
+        $query = CarbonEmission::query()
+            ->select('carbon_emissions.*')
+            ->join('periods', 'carbon_emissions.period_id', '=', 'periods.id')
+            ->where('periods.company_id', $company->id)
+            ->with(['period', 'factor.category.scope', 'factor.unit']);
+
+        // Search
+        if ($search = $request->input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('factor', function($f) use ($search) {
+                    $f->where('name', 'like', "%{$search}%")
+                      ->orWhereHas('category', function($c) use ($search) {
+                          $c->where('name', 'like', "%{$search}%")
+                            ->orWhereHas('scope', function($s) use ($search) {
+                                $s->where('name', 'like', "%{$search}%");
+                            });
+                      });
+                })
+                ->orWhere('carbon_emissions.notes', 'like', "%{$search}%")
+                ->orWhere('periods.year', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $allowedSorts = ['created_at', 'calculated_co2e', 'quantity', 'period_year'];
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDir = $request->input('sort_dir', 'desc');
+
+        if (in_array($sortBy, $allowedSorts)) {
+            if ($sortBy === 'period_year') {
+                $query->orderBy('periods.year', $sortDir);
+            } else {
+                $query->orderBy('carbon_emissions.' . $sortBy, $sortDir);
+            }
+        } else {
+            $query->orderBy('carbon_emissions.created_at', 'desc');
+        }
+
+        $perPage = $request->input('per_page', 10);
+        return response()->json($query->paginate($perPage));
+    }
 }

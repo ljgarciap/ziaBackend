@@ -13,7 +13,7 @@ class ReportController extends Controller
 {
     public function pdfSummary(Period $period)
     {
-        $period->load(['company', 'emissions.factor.category']);
+        $period->load(['company', 'emissions.factor.category.scope', 'emissions.factor.unit']);
 
         // Use the same logic as DashboardController to get the summary
         $dashboardController = new DashboardController();
@@ -27,14 +27,14 @@ class ReportController extends Controller
 
         $pdf = Pdf::loadView('reports.summary', compact('period', 'summary'));
         
-        $filename = 'zia_reporte_' . str_replace(' ', '_', strtolower($period->company->name)) . '_' . $period->year . '.pdf';
+        $filename = 'zia_reporte_' . str_replace(' ', '_', strtolower($period->company->name)) . '_' . $period->year . '_' . date('Y-m-d') . '.pdf';
         
         return $pdf->download($filename);
     }
 
     public function excelExport(Period $period)
     {
-        $filename = 'zia_datos_' . str_replace(' ', '_', strtolower($period->company->name)) . '_' . $period->year . '.xlsx';
+        $filename = 'zia_datos_' . str_replace(' ', '_', strtolower($period->company->name)) . '_' . $period->year . '_' . date('Y-m-d') . '.xlsx';
         return Excel::download(new EmissionExport($period->id), $filename);
     }
 }

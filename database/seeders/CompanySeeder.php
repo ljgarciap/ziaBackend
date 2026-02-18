@@ -80,6 +80,22 @@ class CompanySeeder extends Seeder
             );
         }
 
+        // Assign 'admin@zia.com' to Bucarretes as 'user' to test Context Switching (Global Admin vs Company User)
+        $adminUser = User::where('email', 'admin@zia.com')->first();
+        if ($adminUser) {
+            $bucarretes->users()->syncWithoutDetaching([
+                $adminUser->id => ['role' => 'user', 'is_active' => true]
+            ]);
+        }
+
+        // Assign 'user@zia.com' to EcoTech for testing standard user flow
+        $stdUser = User::where('email', 'user@zia.com')->first();
+        if ($stdUser) {
+            $ecotech->users()->syncWithoutDetaching([
+                $stdUser->id => ['role' => 'user', 'is_active' => true]
+            ]);
+        }
+
         $this->command->info('✅ Companies and periods created successfully');
     }
 }
