@@ -12,32 +12,54 @@ class EmissionCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = [
-            // Scope 1
-            ['name' => 'Fuentes Móviles - Combustibles', 'scope' => '1'],
-            ['name' => 'Fuentes Móviles - Gases', 'scope' => '1'],
-            ['name' => 'Emisiones Fugitivas - Refrigerantes', 'scope' => '1'],
-            ['name' => 'Fuentes Móviles - Extintores', 'scope' => '1'],
-            ['name' => 'Fuentes Móviles - Lubricantes', 'scope' => '1'],
-            ['name' => 'Fuentes Fijas - Combustibles Sólidos', 'scope' => '1'],
-            ['name' => 'Fuentes Fijas - Combustibles Líquidos', 'scope' => '1'],
-            ['name' => 'Fuentes Fijas - Combustibles Gaseosos', 'scope' => '1'],
-            
-            // Scope 2
-            ['name' => 'Electricidad - Red', 'scope' => '2'],
-            
-            // Scope 3 - Otras Fuentes
-            ['name' => 'Viajes Aéreos', 'scope' => '3'],
-            ['name' => 'Trabajo Remoto', 'scope' => '3'],
+        $hierarchy = [
+            1 => [ // Alcance 1
+                'Fuentes Móviles' => [
+                    'Fuentes Móviles - Combustibles',
+                    'Fuentes Móviles - Gases',
+                    'Fuentes Móviles - Extintores',
+                    'Fuentes Móviles - Lubricantes',
+                ],
+                'Emisiones Fugitivas' => [
+                    'Emisiones Fugitivas - Refrigerantes',
+                ],
+                'Fuentes Fijas' => [
+                    'Fuentes Fijas - Combustibles Sólidos',
+                    'Fuentes Fijas - Combustibles Líquidos',
+                    'Fuentes Fijas - Combustibles Gaseosos',
+                ],
+            ],
+            2 => [ // Alcance 2
+                'Energía Adquirida' => [
+                    'Electricidad - Red',
+                ],
+            ],
+            3 => [ // Alcance 3
+                'Otras Fuentes Indirectas' => [
+                    'Viajes Aéreos',
+                    'Trabajo Remoto',
+                ],
+            ],
         ];
 
-        foreach ($categories as $cat) {
-            EmissionCategory::firstOrCreate(
-                ['name' => $cat['name']],
-                ['scope' => $cat['scope']]
-            );
+        foreach ($hierarchy as $scopeId => $parents) {
+            foreach ($parents as $parentName => $subcategories) {
+                // Create or find parent
+                $parent = EmissionCategory::updateOrCreate(
+                    ['name' => $parentName, 'scope_id' => $scopeId],
+                    ['description' => "Categoría principal de $parentName"]
+                );
+
+                foreach ($subcategories as $subName) {
+                    // Create or find subcategory exactly as named originally
+                    EmissionCategory::updateOrCreate(
+                        ['name' => $subName],
+                        ['parent_id' => $parent->id, 'scope_id' => $scopeId]
+                    );
+                }
+            }
         }
 
-        $this->command->info('✅ Emission categories created successfully');
+        $this->command->info('✅ Hierarchical emission categories created successfully');
     }
 }

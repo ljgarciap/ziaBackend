@@ -12,12 +12,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            MasterDataSeeder::class,
             CompanySectorSeeder::class,
             CalculationFormulaSeeder::class,
             EmissionCategorySeeder::class, // Must run before EmissionFactorSeeder
             EmissionFactorSeeder::class,
             UserSeeder::class,
             CompanySeeder::class,
+            CompanyFactorSeeder::class,
             CarbonEmissionSeeder::class,
         ]);
     }
